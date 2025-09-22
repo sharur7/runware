@@ -12,7 +12,7 @@ The project includes a Node.js/Express backend for handling Runware API requests
 
 ## 📂 Project Structure
 ```
-.
+
 ├── server.js        # Express backend server
 ├── public/
 │   ├── index.html   # Frontend UI
