@@ -64,8 +64,7 @@ http://localhost:3000
 
 ---
 
-Curious to see the app in action? Watch a demo [here](http://localhost:3000). <br>
-Or try it yourself [here](http://localhost:3000). <br>
+Curious to see the app in action? Watch a demo [here](http://localhost:3000) or try it yourself [here](http://localhost:3000). <br>
 For more information, refer to the [Runware documentation](https://runware.ai/docs/en/getting-started/introduction).
 
 ---
