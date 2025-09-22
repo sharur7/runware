@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Runware</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <!-- Left panel -->
+    <div class="left-panel">
+      <h1>Image & Video Generator</h1>
+
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="image">Images</button>
+        <button class="tab-btn" data-tab="video">Videos</button>
+      </div>
+
+      <div class="input-group">
+        <label for="prompt">Prompt</label>
+        <input id="prompt" class="prompt-input" type="text" placeholder="Describe what you want to create...">
+      </div>
+
+      <!-- IMAGE OPTIONS -->
+      <div class="image-options">
+        <div class="input-group">
+          <label>Number of results</label>
+          <div class="slider-row">
+            <input class="slider" type="range" min="1" max="5" value="3">
+            <span class="slider-value">3</span>
+          </div>
+        </div>
+
+        <div class="input-row">
+          <div class="input-group">
+            <label for="width">Width</label>
+            <input class="dimension-input width-input" id="width" type="number" value="512" min="64" max="1024">
+          </div>
+          <div class="input-group">
+            <label for="height">Height</label>
+            <input class="dimension-input height-input" id="height" type="number" value="512" min="64" max="1024">
+          </div>
+        </div>
+      </div>
+
+      <!-- VIDEO OPTIONS -->
+      <div class="video-options hidden">
+        <div class="input-group">
+          <label for="resolution">Resolution</label>
+          <select id="resolution" class="resolution-input">
+            <option value="1280x720" selected>1280 x 720 (Landscape)</option>
+            <option value="1920x1080">1920 x 1080 (Landscape)</option>
+            <option value="720x1280">720 x 1280 (Portrait)</option>
+            <option value="1080x1920">1080 x 1920 (Portrait)</option>
+          </select>
+        </div>
+      </div>
+
+      <button class="generate-btn">Generate</button>
+      <p class="status"></p>
+    </div>
+
+    <!-- Right panel -->
+    <div class="right-panel">
+      <div class="output-section">
+        <div class="image-container">
+          <div class="placeholder"></div>
+          <div class="placeholder"></div>
+          <div class="placeholder"></div>
+        </div>
+        <div class="video-container hidden">
+          <div class="placeholder"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const promptInput = document.querySelector(".prompt-input");
+    const generateBtn = document.querySelector(".generate-btn");
+    const statusEl = document.querySelector(".status");
+    const imageContainer = document.querySelector(".image-container");
+    const videoContainer = document.querySelector(".video-container");
+    const tabBtns = document.querySelectorAll(".tab-btn");
+    const widthInput = document.querySelector(".width-input");
+    const heightInput = document.querySelector(".height-input");
+    const resolutionInput = document.querySelector(".resolution-input");
+    const imageOptions = document.querySelector(".image-options");
+    const videoOptions = document.querySelector(".video-options");
+    const slider = document.querySelector(".slider");
+    const sliderValue = document.querySelector(".slider-value");
+
+    let activeTab = "image";
+
+    // Tabs
+    tabBtns.forEach(btn => {
+      btn.addEventListener("click", () => {
+        tabBtns.forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        activeTab = btn.dataset.tab;
+
+        imageContainer.classList.toggle("hidden", activeTab !== "image");
+        videoContainer.classList.toggle("hidden", activeTab !== "video");
+        imageOptions.classList.toggle("hidden", activeTab !== "image");
+        videoOptions.classList.toggle("hidden", activeTab !== "video");
+      });
+    });
+
+    // Slider display
+    slider.addEventListener("input", () => {
+      sliderValue.textContent = slider.value;
+    });
+
+    // Generate
+    generateBtn.addEventListener("click", async () => {
+      const prompt = promptInput.value.trim();
+
+      if (!prompt) {
+        statusEl.textContent = "Please enter a prompt.";
+        return;
+      }
+
+      statusEl.textContent = `Generating ${activeTab}...`;
+      imageContainer.innerHTML = "";
+      videoContainer.innerHTML = "";
+
+      if (activeTab === "image") {
+        for (let i = 0; i < Number(slider.value); i++) {
+          const ph = document.createElement("div");
+          ph.className = "placeholder";
+          imageContainer.appendChild(ph);
+        }
+      } else {
+        const ph = document.createElement("div");
+        ph.className = "placeholder";
+        videoContainer.appendChild(ph);
+      }
+
+      try {
+        let endpoint = activeTab === "image" ? "/generate-image" : "/generate-video";
+        let body = { prompt };
+
+        if (activeTab === "image") {
+          body.width = Number(widthInput.value);
+          body.height = Number(heightInput.value);
+          body.count = Number(slider.value);
+        } else {
+          const [w, h] = resolutionInput.value.split("x").map(Number);
+          body.width = w;
+          body.height = h;
+        }
+
+        const response = await fetch(endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          statusEl.textContent = "Error: " + (data.error || "Unknown error");
+          return;
+        }
+
+        if (activeTab === "image") {
+          statusEl.textContent = "Images generated successfully";
+          imageContainer.innerHTML = "";
+          data.images.forEach(url => {
+            const slot = document.createElement("div");
+            slot.className = "placeholder";
+            const img = document.createElement("img");
+            img.src = url;
+            slot.appendChild(img);
+            imageContainer.appendChild(slot);
+          });
+        } else {
+          statusEl.textContent = "Video generated successfully";
+          videoContainer.innerHTML = "";
+          const slot = document.createElement("div");
+          slot.className = "placeholder";
+          const video = document.createElement("video");
+          video.src = data.videoUrl;
+          video.controls = true;
+          slot.appendChild(video);
+          videoContainer.appendChild(slot);
+        }
+      } catch (err) {
+        statusEl.textContent = `Error generating ${activeTab}.`;
+        console.error(err);
+      }
+    });
+  </script>
+</body>
+</html>
