@@ -3,6 +3,10 @@
 A simple web application that allows you generate **AI-powered images and videos** using the [Runware SDK](https://www.npmjs.com/package/@runware/sdk-js).  
 The project includes a Node.js/Express backend for handling Runware API requests and a frontend UI for user interaction.
 
+<p align="center">
+  <img src="img_1.png" alt="Runware Demo" width="600"/>
+</p>
+
 ---
 
 ## 🚀 Features
